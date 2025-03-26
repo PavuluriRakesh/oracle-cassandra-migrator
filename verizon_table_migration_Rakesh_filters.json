@@ -1,0 +1,85 @@
+{
+    "oracle": {
+        "host": "<HOSTNAME>",
+        "port": 1521,
+        "database": "<DATABASE>",
+        "username": "<USER>",
+        "password": "<PASSWORD>"
+    },
+    "cassandra": {
+        "host": "<HOSTS_CSV>",
+        "port": 9042,
+        "keyspace": "<keyspace>",
+        "username": "cassandra",
+        "password": "cassandra",
+        "local_dc": "DC1"
+    },
+    "s3": {
+        "access_key": "AKIA*******KXI",
+        "secret_key": "5VJU************bwM/",
+        "endpoint": "s3.us-east-1.amazonaws.com",
+        "bucket": "<bucket_name>",
+        "staging_path_raw_data": "staging_raw_data",
+        "staging_path_transformed_data": "staging_transformed_data",
+        "checkpointing_path": "checkpointing"
+    },
+    "stage_to_s3": true,
+    "tables": [
+        {
+            "source_tables": ["table_contact", "table_x_credit_card", "x_payment_source", "table_address"],
+            "target_table": "customer_payment_information",
+            "fetch_size": 10000,
+            "batch_size": 5000,
+            "retries": 3,
+            "num_partitions": 8,
+            "partition_column": {
+                "table_contact": "objid",
+                "table_x_credit_card": "objid",
+                "x_payment_source": "objid",
+                "table_address": "objid"
+            },
+            "partition_lower_bound": {
+                "table_contact": "100009",
+                "table_x_credit_card": "100009",
+                "x_payment_source": "100009",
+                "table_address": "100009"
+            },
+            "partition_upper_bound": {
+                "table_contact": "999995",
+                "table_x_credit_card": "999995",
+                "x_payment_source": "999995",
+                "table_address": "999995"
+            },
+            "filters": {
+                "table_contact": "x_cust_id >= 100000 AND x_cust_id <= 500000",
+                "table_x_credit_card": "x_cc_type IN ('American Express', 'Discover', 'Mastercard')",
+                "x_payment_source": "x_status = 'Active'",
+                "table_address": "state IN ('MI', 'MN', 'MO', 'MP', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH', 'NJ')"
+            },
+            "transformed_columns": [
+                "x_payment_source.objid as objid",
+                "table_contact.x_cust_id as x_cust_id",
+                "x_payment_source.pymt_src2x_credit_card as pymt_src2x_credit_card",
+                "table_x_credit_card.x_credit_card2contact as x_credit_card2contact",
+                "table_x_credit_card.x_credit_card2address as x_credit_card2address",
+                "table_contact.first_name as first_name",
+                "table_contact.last_name as last_name",
+                "table_x_credit_card.x_customer_cc_number as x_customer_cc_number",
+                "table_x_credit_card.x_customer_cc_expmo as x_customer_cc_expmo",
+                "table_x_credit_card.x_customer_cc_expyr as x_customer_cc_expyr",
+                "table_x_credit_card.x_cc_type as x_cc_type",
+                "table_contact.phone as phone",
+                "table_contact.e_mail as e_mail",
+                "x_payment_source.x_pymt_type as x_pymt_type",
+                "x_payment_source.x_pymt_src_name as x_pymt_src_name",
+                "x_payment_source.x_sourcesystem as x_sourcesystem",
+                "x_payment_source.x_status as x_status",
+                "table_address.address as address",
+                "table_address.city as city",
+                "table_address.state as state",
+                "table_address.zipcode as zipcode",
+                "table_contact.country as country"
+            ]
+        }
+    ]
+ }
